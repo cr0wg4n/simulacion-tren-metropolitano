@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class MenuControl : MonoBehaviour
+public class Usuario : MonoBehaviour
 {
     // Start is called before the first frame update
+    public GameObject parada;
+    public float velocidad = 0.4f;
     void Start()
     {
         
@@ -14,10 +15,6 @@ public class MenuControl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
-    }
-    public void LoadScene()
-    {
-       SceneManager.LoadScene("Rutas");
+        transform.position = Vector3.MoveTowards(transform.position, parada.transform.position, velocidad * Time.deltaTime);
     }
 }
