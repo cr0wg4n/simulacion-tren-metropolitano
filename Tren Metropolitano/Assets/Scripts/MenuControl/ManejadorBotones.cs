@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class MenuControl : MonoBehaviour
+public class ManejadorBotones : MonoBehaviour
 {
-    // Start is called before the first frame update
     void Start()
     {
         
@@ -16,8 +15,10 @@ public class MenuControl : MonoBehaviour
     {
         
     }
-    public void LoadScene()
-    {
-       SceneManager.LoadScene("Rutas");
+    public void runEstCentral() {
+        SceneManager.LoadScene("est_central");
+    }
+    public void backToMenu() {
+        SceneManager.LoadScene("Menu");
     }
 }

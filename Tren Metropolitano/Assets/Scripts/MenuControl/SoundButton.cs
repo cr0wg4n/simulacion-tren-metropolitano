@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class MenuControl : MonoBehaviour
+public class SoundButton : MonoBehaviour
 {
     // Start is called before the first frame update
+    public AudioSource audioSource;
+    public AudioClip audioClip;
     void Start()
     {
         
@@ -16,8 +17,9 @@ public class MenuControl : MonoBehaviour
     {
         
     }
-    public void LoadScene()
+    public void playClip()
     {
-       SceneManager.LoadScene("Rutas");
+        audioSource.clip = audioClip;
+        audioSource.Play();
     }
 }
