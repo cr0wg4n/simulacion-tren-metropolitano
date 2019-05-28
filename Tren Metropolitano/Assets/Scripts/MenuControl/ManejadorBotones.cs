@@ -18,4 +18,7 @@ public class ManejadorBotones : MonoBehaviour
     public void runEstCentral() {
         SceneManager.LoadScene("est_central");
     }
+    public void backToMenu() {
+        SceneManager.LoadScene("Menu");
+    }
 }
