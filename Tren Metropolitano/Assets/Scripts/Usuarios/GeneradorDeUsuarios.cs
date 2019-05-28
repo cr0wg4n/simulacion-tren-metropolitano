@@ -32,11 +32,21 @@ public class GeneradorDeUsuarios : MonoBehaviour
     }
     void actualizarVelocidad()
     {
-        foreach (var usuario in usuarios)
-        {
-            Usuario usuarioDelTren = usuario.GetComponent<Usuario>();
-            usuarioDelTren.aceleracion = velocidadActual;
-        }
+        int n=0;
+            foreach (var usuario in usuarios)
+            {
+                try
+                {
+                    Usuario usuarioDelTren = usuario.GetComponent<Usuario>();
+                    usuarioDelTren.aceleracion = velocidadActual;
+                }
+                catch (System.Exception)
+                {
+                    usuarios.RemoveAt(n);
+                    throw;
+                }
+                n++;
+            }
     }
     public void generarPersonas() {
         string personas = inputMuestra.text;

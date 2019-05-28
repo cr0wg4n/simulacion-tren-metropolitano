@@ -17,6 +17,9 @@ public class Usuario : MonoBehaviour
     void Update()
     {
         transform.position = Vector3.MoveTowards(transform.position, parada.transform.position, aceleracion*velocidad * Time.deltaTime);
-        
+        if (parada.transform.position.x == transform.position.x && parada.transform.position.y == transform.position.y)
+        {
+            Destroy(gameObject);
+        }
     }
 }
