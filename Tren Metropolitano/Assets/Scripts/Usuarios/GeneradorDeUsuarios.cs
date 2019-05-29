@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class GeneradorDeUsuarios : MonoBehaviour
 {
     public GameObject estacion;
-    public float velocidadDeUsuariosBase=50;
+    public float velocidadDeUsuariosBase=20;
     private float velocidadActual;
     public GameObject ancianos;
     public GameObject universitarios;
@@ -15,18 +15,44 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public InputField inputMuestra;
     public Slider velocidadSlide;
     public List<GameObject> usuarios;
+    private int numeroPersonasEstacion=0;
+    public Text cantidad;
+    public GameObject tren;
+    public GameObject salidaIzq;
+    public GameObject salidaDerecha;
+    //instancias del tren
+    private GameObject InstanciaTren;
+    private TrenControl trencito;
     void Start()
     {
-        
+        InstanciaTren = Instantiate(tren, salidaIzq.transform.position, Quaternion.identity);
+        trencito = InstanciaTren.GetComponent<TrenControl>();
+        trencito.parada = estacion;
+        trencito.final = salidaDerecha;
     }
     void Update()
     {
         velocidadActual = velocidadDeUsuariosBase * velocidadSlide.value;
         actualizarVelocidad();
+        cantidad.text = "Personas en la Estación: "+numeroPersonasEstacion;
+        moverTrenDerecha();
+    }
+    void moverTrenDerecha() {
+        if (numeroPersonasEstacion >= 200) {
+            trencito.modo = 1;
+        }
     }
     Vector3 randomizePosition() {
         float x=Random.Range(-10.0f,10.0f);
-        float y = Random.Range(-6.0f,6.0f);
+        int r = Random.Range(0, 2);
+        float y = 0f;
+        if (r == 1)
+        {
+            y = Random.Range(-6.0f, -1.3f);
+        }
+        else {
+            y = Random.Range(1.3f, 6.0f);
+        }
         Vector3 res = new Vector3(x,y,0.0f);
         return res;
     }
@@ -48,7 +74,8 @@ public class GeneradorDeUsuarios : MonoBehaviour
                 n++;
             }
     }
-    public void generarPersonas() {
+    public void generarPersonas()
+    {
         string personas = inputMuestra.text;
         int n = int.Parse(personas);
         for (int i = 0; i < n; i++)
@@ -60,7 +87,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
                     GameObject anc = Instantiate(ancianos, randomizePosition(), Quaternion.identity);
                     Usuario anci = anc.GetComponent<Usuario>();
                     anci.parada = estacion;
-                    anci.velocidad = 0.1f;
+                    anci.velocidad = 0.15f;
                     usuarios.Add(anc);
                     break;
                 case 1:
@@ -88,6 +115,13 @@ public class GeneradorDeUsuarios : MonoBehaviour
                     break;
             }
 
+        }
+    }
+    void OnTriggerEnter2D(Collider2D col)
+    {
+        if (col.gameObject.tag == "persona")
+        {
+            numeroPersonasEstacion++;
         }
     }
 }
