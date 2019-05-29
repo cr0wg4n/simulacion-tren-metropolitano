@@ -6,6 +6,8 @@ TagManager:
   tags:
   - persona
   - estacion
+  - persona_salida
+  - tren
   layers:
   - Default
   - TransparentFX

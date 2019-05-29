@@ -19,6 +19,13 @@ public class Usuario : MonoBehaviour
         transform.position = Vector3.MoveTowards(transform.position, parada.transform.position, aceleracion*velocidad * Time.deltaTime);
         if (parada.transform.position.x == transform.position.x && parada.transform.position.y == transform.position.y)
         {
+            
+        }
+    }
+    void OnTriggerEnter2D(Collider2D col)
+    {
+        if (col.gameObject.tag == "estacion")
+        {
             Destroy(gameObject);
         }
     }
