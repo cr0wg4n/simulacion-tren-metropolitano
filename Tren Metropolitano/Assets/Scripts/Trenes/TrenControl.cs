@@ -30,5 +30,8 @@ public class TrenControl : MonoBehaviour
             default:
                 break;
         }
+        if (transform.position.x >= 14f) {
+            Destroy(gameObject);
+        }
     }
 }
