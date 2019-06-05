@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 public class GeneradorDeUsuarios : MonoBehaviour
 {
+    private int hora=6;
+    private float minuto=0;
+    private int minutoInt = 0;
+    public bool trenEnEstacion = false;
     public GameObject estacion;
     public float velocidadDeUsuariosBase=20;
     private float velocidadActual;
@@ -17,40 +21,58 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public List<GameObject> usuarios;
     private int numeroPersonasEstacion=0;
     public Text cantidad;
+    public Text horaEstación;
     public GameObject tren;
     public GameObject salidaIzq;
     public GameObject salidaDerecha;
-    //instancias del tren
-    private GameObject InstanciaTren;
-    private TrenControl trencito;
 
     //variables para colas
     public int tPromedioEntreLlegadas = 0;
+    private int tPromedioEntreLlegadasBase = 100;
+
     //tabla exponencial (ejey)
     public List<double> probs;
     public List<int> tiempos;
+    public List<GameObject> trenes;
 
-    int number = 0;
-    bool couroutineStarted = false;
+    Horarios horarios = new Horarios();
 
+    void controlHora() {
+        if (minuto > 60) {
+            hora++;
+            minuto = 0;
+        }
+        if (hora >= 24) {
+            hora = 0;
+        }
+    }
     void Start()
     {
-        InstanciaTren = Instantiate(tren, salidaIzq.transform.position, Quaternion.identity);
-        trencito = InstanciaTren.GetComponent<TrenControl>();
-        trencito.parada = estacion;
-        trencito.final = salidaDerecha;
+        generarPersonas(30);
+        generarTren();
     }
+
     void Update()
     {
+        //hora de la estacion
+        controlHora();
+        //control de la demanda
+        controlDeDemanda();
+        minutoInt = Mathf.RoundToInt(minuto);
+        horaEstación.text = horarios.formatoHora(hora,minutoInt);
+        //actualizacion de la velocidad
         velocidadActual = velocidadDeUsuariosBase * velocidadSlide.value;
-        actualizarVelocidad();
+        actualizarVelocidadPersonas();
+        actualizarVelocidadTren();
+        //conteo de pesonas en la estación
         cantidad.text = "Personas en la Estación: "+numeroPersonasEstacion;
+        //tren pendiente a llenarse
         moverTrenDerecha();
 
         double rnd = (double)(Random.Range(0, 100))/(double)100;
-
         double aux = 0;
-        for (int i=0 ; i<tiempos.Count ; i++)
+
+        for (int i=0 ; i<tiempos.Count; i++)
         {
             if (rnd > aux && rnd < probs[i])
             {
@@ -93,12 +115,50 @@ public class GeneradorDeUsuarios : MonoBehaviour
             }
             aux = probs[i];
         }
-    }
+        minuto += (velocidadSlide.value*0.50f);
 
-    void moverTrenDerecha() {
-        if (numeroPersonasEstacion >= 200) {
-            trencito.modo = 1;
+        //en el modulo esta cada cuantos minutos llega un tren
+        if ((minutoInt % 25==0 && minutoInt != 0) && trenEnEstacion==false) {
+           generarTren();
+           minuto ++;
         }
+    }
+    void generarTren() {
+        GameObject trenGenerado = Instantiate(tren, salidaIzq.transform.position, Quaternion.identity);
+        TrenControl trencito = trenGenerado.GetComponent<TrenControl>();
+        trencito.parada = estacion;
+        trencito.final = salidaDerecha;
+        trenes.Add(trenGenerado);
+    }
+    void moverTrenDerecha() {
+        int n = 0;
+        //cada cuanto sale un tren esta en el modulo
+        if (trenEnEstacion==true && (minutoInt % 20==0 || numeroPersonasEstacion>=200))
+        {
+            foreach (var tren in trenes)
+            {
+                try
+                {
+                    TrenControl trenItem = tren.GetComponent<TrenControl>();
+                    trenItem.modo = 1;
+                    if (numeroPersonasEstacion >= 200)
+                    {
+                        numeroPersonasEstacion -= 200;
+                    }
+                    else {
+                        numeroPersonasEstacion = 0;
+                    }
+                    minuto += 1;
+                }
+                catch (System.Exception)
+                {
+                        trenes.RemoveAt(n);
+                        throw;
+                }
+                n++;
+            }
+        }
+
     }
     Vector3 randomizePosition() {
         float x=Random.Range(-10.0f,10.0f);
@@ -114,7 +174,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
         Vector3 res = new Vector3(x,y,0.0f);
         return res;
     }
-    void actualizarVelocidad()
+    void actualizarVelocidadPersonas()
     {
         int n=0;
             foreach (var usuario in usuarios)
@@ -132,6 +192,25 @@ public class GeneradorDeUsuarios : MonoBehaviour
                 n++;
             }
     }
+    void actualizarVelocidadTren()
+    {
+        int n = 0;
+        foreach (var tren in trenes)
+        {
+            try
+            {
+                TrenControl trenControl = tren.GetComponent<TrenControl>();
+                trenControl.aceleracion = velocidadActual;
+            }
+            catch (System.Exception)
+            {
+                trenes.RemoveAt(n);
+                throw;
+            }
+            n++;
+        }
+    }
+
     public void generarPersonas()
     {
         probs = new List<double>();
@@ -149,58 +228,64 @@ public class GeneradorDeUsuarios : MonoBehaviour
                 probs.Add(prob);
             }
         }
-
         for (int i = 0; i < tiempos.Count; i++)
         {
-            print(tiempos[i] + " - " + probs[i]);
+            //Debug.Log(tiempos[i] + " - " + probs[i]);
+        }
+       
+    }
+    public void generarPersonas(int n)
+    {
+        probs = new List<double>();
+        tiempos = new List<int>();
+        double tasaDeLlegadas = 1.00 / (double) n; // Pasajeros por unidad de tiempo
+        double prob = 0;
+        for (int i = 1; i <= 100; i++) //generando tabla exponencial con x -> tiempos entre llegadas, y -> probabilidades del tiempo
+        {
+            prob = tasaDeLlegadas * Mathf.Pow((float)2.71828, (float)tasaDeLlegadas * i);
+            if (prob <= 1)
+            {
+                tiempos.Add(i);
+                probs.Add(prob);
+            }
+        }
+        for (int i = 0; i < tiempos.Count; i++)
+        {
+            //Debug.Log(tiempos[i] + " - " + probs[i]);
         }
 
-        //string personas = inputMuestra.text;
-        //int n = int.Parse(personas);
-        //for (int i = 0; i < n; i++)
-        //{
-        //    int tipoPersonas = Random.Range(0, 4);
-        //    switch (tipoPersonas)
-        //    {
-        //        case 0:
-        //            GameObject anc = Instantiate(ancianos, randomizePosition(), Quaternion.identity);
-        //            Usuario anci = anc.GetComponent<Usuario>();
-        //            anci.parada = estacion;
-        //            anci.velocidad = 0.15f;
-        //            usuarios.Add(anc);
-        //            break;
-        //        case 1:
-        //            GameObject uni = Instantiate(universitarios, randomizePosition(), Quaternion.identity);
-        //            Usuario univ = uni.GetComponent<Usuario>();
-        //            univ.parada = estacion;
-        //            univ.velocidad = 0.3f;
-        //            usuarios.Add(uni);
-        //            break;
-        //        case 2:
-        //            GameObject ni = Instantiate(niños, randomizePosition(), Quaternion.identity);
-        //            Usuario ninos = ni.GetComponent<Usuario>();
-        //            ninos.parada = estacion;
-        //            ninos.velocidad = 0.2f ;
-        //            usuarios.Add(ni);
-        //            break;
-        //        case 3:
-        //            GameObject adu = Instantiate(adultos, randomizePosition(), Quaternion.identity);
-        //            Usuario adul = adu.GetComponent<Usuario>();
-        //            adul.parada = estacion;
-        //            adul.velocidad = 0.25f;
-        //            usuarios.Add(adu);
-        //            break;
-        //        default:
-        //            break;
-        //    }
-
-        //}
     }
-    void OnTriggerEnter2D(Collider2D col)
+    void controlDeDemanda() {
+        foreach (var demanda in horarios.demanda)
+        {
+            if (demanda.HoraIni == hora && demanda.MinutoIni == minutoInt)
+            {
+                generarPersonas(demanda.TEntrePasajeros);
+                Debug.Log("demanda");
+            }
+            if (demanda.HoraFin == hora && demanda.MinutoFin == minutoInt) {
+                generarPersonas(40);
+                Debug.Log("sin demanda");
+            }
+        }
+    }
+
+
+    void OnTriggerEnter2D(Collider2D collision)
     {
-        if (col.gameObject.tag == "persona")
+        if (collision.gameObject.tag == "persona")
         {
             numeroPersonasEstacion++;
+        }
+        if (collision.gameObject.tag == "tren") {
+            trenEnEstacion = true;
+        }
+    }
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "tren")
+        {
+            trenEnEstacion = false;
         }
     }
 }
