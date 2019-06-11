@@ -45,6 +45,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
         if (hora >= 24) {
             hora = 0;
         }
+        this.GetComponent<Ambiente>().rotarEstrella();
     }
     void Start()
     {
