@@ -24,7 +24,7 @@ public class Graph
             float x = partida.x;
             float y = partida.y;
             float maxLocalY = valorAbsoluto(MAX_Y, maxValY, valores[i]);
-            int valorY = Mathf.RoundToInt(maxValY/offsetY);
+            int valorY = Mathf.RoundToInt(maxLocalY / offsetY);
             List<Vector2> ancho = new List<Vector2>();
             for (int j = 0; j < valorY; j++)
             {

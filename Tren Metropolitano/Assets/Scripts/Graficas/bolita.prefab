@@ -10,9 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 102221380531092073}
   - component: {fileID: 102221380531092072}
+  - component: {fileID: 5200604837000333653}
   m_Layer: 0
   m_Name: bolita
-  m_TagString: Untagged
+  m_TagString: grap
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -79,3 +80,15 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &5200604837000333653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 102221380531092075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ca6156440267274992f5380873ef0a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
