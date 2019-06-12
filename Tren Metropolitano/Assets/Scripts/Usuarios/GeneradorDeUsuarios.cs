@@ -17,7 +17,8 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public GameObject universitarios;
     public GameObject niños;
     public GameObject adultos;
-    public InputField inputMuestra;
+    //public InputField inputMuestra;
+    public Dropdown selectDistribución;
     public Dropdown selectLlegadas;
     public Slider velocidadSlide;
     public List<GameObject> usuarios;
@@ -49,12 +50,17 @@ public class GeneradorDeUsuarios : MonoBehaviour
             hora = 0;
         }
     }
+
     void Start()
     {
-        //generarPersonasExponencial();
-        generarPersonasPoisson();
+        if (selectDistribución.value == 1)
+        {
+            generarPersonasExponencial();
+        } else if(selectDistribución.value == 2)
+        {
+            generarPersonasPoisson();
+        }
         generarTren();
-
     }
 
     void Update()
@@ -75,14 +81,22 @@ public class GeneradorDeUsuarios : MonoBehaviour
         cantidad.text = "Personas en la Estación: "+numeroPersonasEstacion;
         //tren pendiente a llenarse
         moverTrenDerecha();
+        
 
-        // GENERADOR EXPONENCIAL (descomentar para activar, solo uno de los dos)
-        //generarPersonasExponencial();
-        //generadorExponencial();
-
-        // GENERADOR POISSON (descomentar para activar, solo uno de los dos)
-        generarPersonasPoisson();
-        generadorPoisson();
+        if (selectDistribución.value == 1)
+        {
+            print("exponencial");
+            // GENERADOR EXPONENCIAL
+            generarPersonasExponencial();
+            generadorExponencial();
+        }
+        else if (selectDistribución.value == 2)
+        {
+            print("poison");
+            // GENERADOR POISSON
+            generarPersonasPoisson();
+            generadorPoisson();
+        }
 
 
         minuto += (velocidadSlide.value*0.50f);
@@ -190,13 +204,13 @@ public class GeneradorDeUsuarios : MonoBehaviour
         switch (valSelect)
         {
             case 0:
-                tPromedioEntreLlegadas = 1500;
+                tPromedioEntreLlegadas = 23;
                 break;
             case 1:
-                tPromedioEntreLlegadas = 3200;
+                tPromedioEntreLlegadas = 45;
                 break;
             case 2:
-                tPromedioEntreLlegadas = 250;
+                tPromedioEntreLlegadas = 2;
                 break;
         }
 
@@ -204,11 +218,12 @@ public class GeneradorDeUsuarios : MonoBehaviour
         double prob = 0;
         for(int i=1; i<=100; i++) //generando tabla exponencial con x -> tiempos entre llegadas, y -> probabilidades del tiempo
         {
-            prob = tasaDeLlegadas * Mathf.Pow((float)2.71828, (float)tasaDeLlegadas * i);
+            prob = tasaDeLlegadas * Mathf.Pow((float)2.71828, (float)(-tasaDeLlegadas) * i);
             if (prob <= 1)
             {
                 tiempos.Add(i);
                 probs.Add(prob);
+                //print("print exponencial: " + tiempos[i-1] + " - " + probs[i-1]);
             }
         }
         //for (int i = 0; i < tiempos.Count; i++)
@@ -226,13 +241,13 @@ public class GeneradorDeUsuarios : MonoBehaviour
         switch (tPromedioEntreLlegadas)
         {
             case 0:
-                tPromedioEntreLlegadas = 500;
+                tPromedioEntreLlegadas = 23;
                 break;
             case 1:
-                tPromedioEntreLlegadas = 1200;
+                tPromedioEntreLlegadas = 45;
                 break;
             case 2:
-                tPromedioEntreLlegadas = 150;
+                tPromedioEntreLlegadas = 2;
                 break;
         }
 
@@ -311,7 +326,8 @@ public class GeneradorDeUsuarios : MonoBehaviour
 
         for (int i = 0; i < tiempos.Count; i++)
         {
-            if (rnd > aux && rnd < probs[i])
+            //print(aux + " - " + rnd + " - " + probs[i]);
+            if (rnd > aux && rnd < probs[i]*1.4)
             {
                 int tipoPersonas = Random.Range(0, 4);
                 switch (tipoPersonas)
@@ -368,7 +384,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
 
         for (int i = 0; i < tiempos.Count; i++)
         {
-            if (rnd > aux && rnd < probs[i]*100)
+            if (rnd > aux && rnd < probs[i]*7)
             {
                 int tipoPersonas = Random.Range(0, 4);
                 switch (tipoPersonas)
