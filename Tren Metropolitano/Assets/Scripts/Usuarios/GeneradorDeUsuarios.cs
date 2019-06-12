@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Timers;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,16 +18,19 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public GameObject adultos;
     public InputField inputMuestra;
     public Dropdown selectLlegadas;
+    public Dropdown selectDistribucion;
     public Slider velocidadSlide;
     public List<GameObject> usuarios;
     private int numeroPersonasEstacion=0;
     public Text cantidad;
     public Text horaEstación;
+    public Text horaDemanda;
     public GameObject tren;
     public GameObject salidaIzq;
     public GameObject salidaDerecha;
-    Timer timer = new Timer();
 
+    private int basePersonasLlegadas = 28;
+    private int diferencialPersonas;
     //variables para colas
     public int tPromedioEntreLlegadas = 0;
     private int tPromedioEntreLlegadasBase = 100;
@@ -37,30 +39,20 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public List<double> probs;
     public List<int> tiempos;
     public List<GameObject> trenes;
-
+    private bool demandaBandera = false;
     Horarios horarios = new Horarios();
 
-    void controlHora() {
-        if (minuto > 60) {
-            hora++;
-            minuto = 0;
-        }
-        if (hora >= 24) {
-            hora = 0;
-        }
-    }
+    private int minTimestamp = 0;
+
     void Start()
     {
-        //generarPersonasExponencial();
-        generarPersonasPoisson();
+        diferencialPersonas = 0;
+        generarPersonasSegunDistribucion(basePersonasLlegadas);
         generarTren();
-
     }
 
     void Update()
     {
-        //print(selectLlegadas.value);
-
         //hora de la estacion
         controlHora();
         //control de la demanda
@@ -75,22 +67,55 @@ public class GeneradorDeUsuarios : MonoBehaviour
         cantidad.text = "Personas en la Estación: "+numeroPersonasEstacion;
         //tren pendiente a llenarse
         moverTrenDerecha();
-
-        // GENERADOR EXPONENCIAL (descomentar para activar, solo uno de los dos)
-        //generarPersonasExponencial();
-        //generadorExponencial();
-
-        // GENERADOR POISSON (descomentar para activar, solo uno de los dos)
-        generarPersonasPoisson();
-        generadorPoisson();
-
+        generadorDePersonas();
 
         minuto += (velocidadSlide.value*0.50f);
 
         //en el modulo esta cada cuantos minutos llega un tren
         if ((minutoInt % 25==0 && minutoInt != 0) && trenEnEstacion==false) {
            generarTren();
-           minuto ++;
+            minTimestamp = minutoInt;
+            minuto++;
+        }
+    }
+    void controlHora()
+    {
+        if (minuto > 60)
+        {
+            hora++;
+            minuto = 0;
+        }
+        if (hora >= 22) //hora para finalizar 10PM
+        {
+            hora = 0;
+        }
+        if (hora >= 5 && hora < 19)
+        {
+            this.GetComponent<Ambiente>().dia();
+        }
+        else
+        {
+            this.GetComponent<Ambiente>().noche();
+        }
+    }
+    void actualizarPersonasLlegadas()
+    {
+        diferencialPersonas = basePersonasLlegadas - Mathf.RoundToInt(basePersonasLlegadas * velocidadSlide.value);
+        generarPersonasSegunDistribucion(diferencialPersonas);
+    }
+    void generarPersonasSegunDistribucion(int n)
+    {
+        int valSelect = selectDistribucion.value;
+        switch (valSelect)
+        {
+            case 0:
+                generarPersonasExponencial(n);
+                Debug.Log("distribucion exponencial");
+                break;
+            case 1:
+                generarPersonasPoisson(n);
+                Debug.Log("distribucion poisson");
+                break;
         }
     }
     void generarTren() {
@@ -103,7 +128,8 @@ public class GeneradorDeUsuarios : MonoBehaviour
     void moverTrenDerecha() {
         int n = 0;
         //cada cuanto sale un tren esta en el modulo
-        if (trenEnEstacion==true && (minutoInt % 20==0 || numeroPersonasEstacion>=200))
+        //if (trenEnEstacion==true && (minutoInt - minTimestamp == 15 || numeroPersonasEstacion>=200))
+        if (trenEnEstacion == true && (minutoInt - minTimestamp) % 15 == 0)
         {
             foreach (var tren in trenes)
             {
@@ -180,27 +206,12 @@ public class GeneradorDeUsuarios : MonoBehaviour
             n++;
         }
     }
-
-    public void generarPersonasExponencial()
+    public void generarPersonasExponencial(int n)
     {
         probs = new List<double>();
         tiempos = new List<int>();
-
-        int valSelect = selectLlegadas.value;
-        switch (valSelect)
-        {
-            case 0:
-                tPromedioEntreLlegadas = 1500;
-                break;
-            case 1:
-                tPromedioEntreLlegadas = 3200;
-                break;
-            case 2:
-                tPromedioEntreLlegadas = 250;
-                break;
-        }
-
-        double tasaDeLlegadas = 1.00/(double)tPromedioEntreLlegadas; // Pasajeros por unidad de tiempo
+        
+        double tasaDeLlegadas = 1.00/(double)n; // Pasajeros por unidad de tiempo
         double prob = 0;
         for(int i=1; i<=100; i++) //generando tabla exponencial con x -> tiempos entre llegadas, y -> probabilidades del tiempo
         {
@@ -211,32 +222,13 @@ public class GeneradorDeUsuarios : MonoBehaviour
                 probs.Add(prob);
             }
         }
-        //for (int i = 0; i < tiempos.Count; i++)
-        //{
-            //Debug.Log(tiempos[i] + " - " + probs[i]);
-        //}
-       
     }
-
-    public void generarPersonasPoisson()
+    public void generarPersonasPoisson(int n)
     {
         probs = new List<double>();
         tiempos = new List<int>();
         
-        switch (tPromedioEntreLlegadas)
-        {
-            case 0:
-                tPromedioEntreLlegadas = 500;
-                break;
-            case 1:
-                tPromedioEntreLlegadas = 1200;
-                break;
-            case 2:
-                tPromedioEntreLlegadas = 150;
-                break;
-        }
-
-        double tasaDeLlegadas = 1.00 / (double)tPromedioEntreLlegadas; // Pasajeros por unidad de tiempo
+        double tasaDeLlegadas = 1.00 / (double)n; // Pasajeros por unidad de tiempo
         double prob = 0;
         for (int i = 1; i <= 100; i++) //generando tabla exponencial con x -> tiempos entre llegadas, y -> probabilidades del tiempo
         {
@@ -248,63 +240,62 @@ public class GeneradorDeUsuarios : MonoBehaviour
             }
         }
     }
-
-    public void generarPersonas(int n)
+    float periodosSeleccionado()
     {
-        probs = new List<double>();
-        tiempos = new List<int>();
-        double tasaDeLlegadas = 1.00 / (double) n; // Pasajeros por unidad de tiempo
-        double prob = 0;
-        for (int i = 1; i <= 100; i++) //generando tabla exponencial con x -> tiempos entre llegadas, y -> probabilidades del tiempo
+        float res=0;
+        int valSelect = selectLlegadas.value;
+        switch (valSelect)
         {
-            prob = tasaDeLlegadas * Mathf.Pow((float)2.71828, (float)tasaDeLlegadas * i);
-            if (prob <= 1)
-            {
-                tiempos.Add(i);
-                probs.Add(prob);
-            }
+            case 0:
+                res = 1f;
+                Debug.Log("periodo laboral");
+                break;
+            case 1:
+                res = 2f;
+                Debug.Log("periodo vacacional");
+                break;
+            case 2:
+                res = 1f;
+                Debug.Log("dia festivo");
+                break;
         }
-        for (int i = 0; i < tiempos.Count; i++)
-        {
-            //Debug.Log(tiempos[i] + " - " + probs[i]);
-        }
-
+        return res;
     }
     void controlDeDemanda() {
         foreach (var demanda in horarios.demanda)
         {
-            if (demanda.HoraIni == hora && demanda.MinutoIni == minutoInt)
+            enHora(demanda.HoraIni, demanda.MinutoIni, demanda.HoraFin, demanda.MinutoFin);
+            if (demandaBandera)
             {
-                generarPersonas(demanda.TEntrePasajeros);
-                //Debug.Log("demanda");
+                int dif = demanda.TEntrePasajeros - Mathf.RoundToInt(demanda.TEntrePasajeros * velocidadSlide.value);
+                float ajuste = periodosSeleccionado();
+                dif = Mathf.RoundToInt (dif * ajuste);
+                generarPersonasSegunDistribucion(dif);
+                horaDemanda.color = Color.red;
+                horaDemanda.text = "Hora pico";
+                Debug.Log("Demanda: " + dif);
             }
-            if (demanda.HoraFin == hora && demanda.MinutoFin == minutoInt) {
-                generarPersonas(40);
-                //Debug.Log("sin demanda");
+            else
+            {
+                actualizarPersonasLlegadas();
+                horaDemanda.color = Color.green;
+                horaDemanda.text = "Hora Normal";
+                Debug.Log("Sin demanda: " + diferencialPersonas);
             }
         }
     }
-
-
-    void OnTriggerEnter2D(Collider2D collision)
+    void enHora(int horaI, int minI, int horaF, int minF)
     {
-        if (collision.gameObject.tag == "persona")
+        if (hora == horaI && minutoInt == minI)
         {
-            numeroPersonasEstacion++;
+            demandaBandera = true;
         }
-        if (collision.gameObject.tag == "tren") {
-            trenEnEstacion = true;
+        if (hora == horaF && minutoInt == minF)
+        {
+            demandaBandera = false;
         }
     }
-    private void OnTriggerExit2D(Collider2D collision)
-    {
-        if (collision.gameObject.tag == "tren")
-        {
-            trenEnEstacion = false;
-        }
-    }
-
-    public void generadorExponencial()
+    public void generadorDePersonas()
     {
         double rnd = (double)(Random.Range(0, 100)) / (double)100;
         double aux = 0;
@@ -360,61 +351,22 @@ public class GeneradorDeUsuarios : MonoBehaviour
             aux = probs[i];
         }
     }
-
-    public void generadorPoisson()
+    void OnTriggerEnter2D(Collider2D collision)
     {
-        double rnd = (double)(Random.Range(0, 100)) / (double)100;
-        double aux = 0;
-
-        for (int i = 0; i < tiempos.Count; i++)
+        if (collision.gameObject.tag == "persona")
         {
-            if (rnd > aux && rnd < probs[i]*100)
-            {
-                int tipoPersonas = Random.Range(0, 4);
-                switch (tipoPersonas)
-                {
-                    case 0:
-                        GameObject anc = Instantiate(ancianos, randomizePosition(), Quaternion.identity);
-                        Usuario anci = anc.GetComponent<Usuario>();
-                        anci.parada = estacion;
-                        anci.velocidad = 0.15f;
-                        usuarios.Add(anc);
-                        break;
-                    case 1:
-                        GameObject uni = Instantiate(universitarios, randomizePosition(), Quaternion.identity);
-                        Usuario univ = uni.GetComponent<Usuario>();
-                        univ.parada = estacion;
-                        univ.velocidad = 0.3f;
-                        usuarios.Add(uni);
-                        break;
-                    case 2:
-                        GameObject ni = Instantiate(niños, randomizePosition(), Quaternion.identity);
-                        Usuario ninos = ni.GetComponent<Usuario>();
-                        ninos.parada = estacion;
-                        ninos.velocidad = 0.2f;
-                        usuarios.Add(ni);
-                        break;
-                    case 3:
-                        GameObject adu = Instantiate(adultos, randomizePosition(), Quaternion.identity);
-                        Usuario adul = adu.GetComponent<Usuario>();
-                        adul.parada = estacion;
-                        adul.velocidad = 0.25f;
-                        usuarios.Add(adu);
-                        break;
-                    default:
-                        break;
-                }
-
-                // Salidas del tren
-                double rndS = (double)(Random.Range(0, 100)) / (double)100;
-                if (rndS < 0.05 && numeroPersonasEstacion > 1)
-                {
-                    numeroPersonasEstacion--;
-                }
-            }
-            aux = probs[i]*100;
-
-            // AQUI DELAY CON: tiempos[i]
+            numeroPersonasEstacion++;
+        }
+        if (collision.gameObject.tag == "tren")
+        {
+            trenEnEstacion = true;
+        }
+    }
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "tren")
+        {
+            trenEnEstacion = false;
         }
     }
 }
