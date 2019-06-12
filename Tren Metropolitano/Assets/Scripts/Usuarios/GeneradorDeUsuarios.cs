@@ -1,32 +1,34 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Timers;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class GeneradorDeUsuarios : MonoBehaviour
 {
-    private int hora = 6;
-    private float minuto = 0;
+    private int hora=6;
+    private float minuto=0;
     private int minutoInt = 0;
     public bool trenEnEstacion = false;
     public GameObject estacion;
-    public float velocidadDeUsuariosBase = 15;
+    public float velocidadDeUsuariosBase=20;
     private float velocidadActual;
     public GameObject ancianos;
     public GameObject universitarios;
     public GameObject niños;
     public GameObject adultos;
     public InputField inputMuestra;
+    public Dropdown selectLlegadas;
     public Slider velocidadSlide;
     public List<GameObject> usuarios;
-    private int numeroPersonasEstacion = 0;
+    private int numeroPersonasEstacion=0;
     public Text cantidad;
     public Text horaEstación;
     public GameObject tren;
     public GameObject salidaIzq;
     public GameObject salidaDerecha;
-    private int basePersonasLlegadas = 30;
-    private int diferencialPersonas;
+    Timer timer = new Timer();
+
     //variables para colas
     public int tPromedioEntreLlegadas = 0;
     private int tPromedioEntreLlegadasBase = 100;
@@ -35,7 +37,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public List<double> probs;
     public List<int> tiempos;
     public List<GameObject> trenes;
-    private bool demandaBandera = false;
+
     Horarios horarios = new Horarios();
 
     void controlHora() {
@@ -46,21 +48,18 @@ public class GeneradorDeUsuarios : MonoBehaviour
         if (hora >= 24) {
             hora = 0;
         }
-        this.GetComponent<Ambiente>().rotarEstrella();
-    }
-    void actualizarPersonasLlegadas() {
-        diferencialPersonas = basePersonasLlegadas - Mathf.RoundToInt (basePersonasLlegadas * velocidadSlide.value);
-        generarPersonas(diferencialPersonas);
     }
     void Start()
     {
-        diferencialPersonas = 0;
-        generarPersonas(basePersonasLlegadas);
+        generarPersonas();
         generarTren();
+
     }
 
     void Update()
     {
+        //print(selectLlegadas.value);
+
         //hora de la estacion
         controlHora();
         //control de la demanda
@@ -75,6 +74,8 @@ public class GeneradorDeUsuarios : MonoBehaviour
         cantidad.text = "Personas en la Estación: "+numeroPersonasEstacion;
         //tren pendiente a llenarse
         moverTrenDerecha();
+
+        //timer.
 
         double rnd = (double)(Random.Range(0, 100))/(double)100;
         double aux = 0;
@@ -118,10 +119,18 @@ public class GeneradorDeUsuarios : MonoBehaviour
                         break;
                 }
 
+                // Salidas del tren
+                double rndS = (double)(Random.Range(0, 100)) / (double)100;
+                if (rndS < 0.05 && numeroPersonasEstacion > 1)
+                {
+                    numeroPersonasEstacion--;
+                }
+
                 // AQUI DELAY CON: tiempos[i]
             }
             aux = probs[i];
         }
+
         minuto += (velocidadSlide.value*0.50f);
 
         //en el modulo esta cada cuantos minutos llega un tren
@@ -223,7 +232,20 @@ public class GeneradorDeUsuarios : MonoBehaviour
         probs = new List<double>();
         tiempos = new List<int>();
 
-        tPromedioEntreLlegadas = int.Parse(inputMuestra.text);
+        int valSelect = selectLlegadas.value;
+        switch (valSelect)
+        {
+            case 0:
+                tPromedioEntreLlegadas = 1500;
+                break;
+            case 1:
+                tPromedioEntreLlegadas = 3200;
+                break;
+            case 2:
+                tPromedioEntreLlegadas = 250;
+                break;
+        }
+        print("select: " + tPromedioEntreLlegadas);
         double tasaDeLlegadas = 1.00/(double)tPromedioEntreLlegadas; // Pasajeros por unidad de tiempo
         double prob = 0;
         for(int i=1; i<=100; i++) //generando tabla exponencial con x -> tiempos entre llegadas, y -> probabilidades del tiempo
@@ -237,7 +259,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
         }
         for (int i = 0; i < tiempos.Count; i++)
         {
-            Debug.Log(tiempos[i] + " - " + probs[i]);
+            //Debug.Log(tiempos[i] + " - " + probs[i]);
         }
        
     }
@@ -265,29 +287,18 @@ public class GeneradorDeUsuarios : MonoBehaviour
     void controlDeDemanda() {
         foreach (var demanda in horarios.demanda)
         {
-            enHora(demanda.HoraIni, demanda.MinutoIni, demanda.HoraFin, demanda.MinutoFin);
-            if (demandaBandera)
+            if (demanda.HoraIni == hora && demanda.MinutoIni == minutoInt)
             {
-                int dif = demanda.TEntrePasajeros - Mathf.RoundToInt(demanda.TEntrePasajeros * velocidadSlide.value);
-                generarPersonas(dif);
-                Debug.Log("Demanda: " + dif);
-            } else {
-                actualizarPersonasLlegadas();
-                Debug.Log("Sin demanda: " + diferencialPersonas);
+                generarPersonas(demanda.TEntrePasajeros);
+                Debug.Log("demanda");
+            }
+            if (demanda.HoraFin == hora && demanda.MinutoFin == minutoInt) {
+                generarPersonas(40);
+                Debug.Log("sin demanda");
             }
         }
     }
 
-    void enHora(int horaI, int minI, int horaF, int minF) {
-        if (hora == horaI && minutoInt == minI)
-        {
-            demandaBandera = true;
-        }
-        if (hora == horaF && minutoInt == minF)
-        {
-            demandaBandera = false;
-        }
-    }
 
     void OnTriggerEnter2D(Collider2D collision)
     {
