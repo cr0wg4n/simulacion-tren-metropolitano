@@ -14,7 +14,7 @@ public class GeneradorGrafico : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        graficador = new Graph(16, 6, new Vector2(-8f, -3f));
+        graficador = new Graph(15, 6, new Vector2(-7.5f, -3f));
         float[] vector = new float[100];
         for (int i = 0; i < vector.Length; i++)
         {

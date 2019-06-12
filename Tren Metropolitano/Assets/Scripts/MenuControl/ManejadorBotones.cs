@@ -21,4 +21,7 @@ public class ManejadorBotones : MonoBehaviour
     public void backToMenu() {
         SceneManager.LoadScene("Menu");
     }
+    public void paradaEscena() {
+        SceneManager.LoadScene("est_paradas");
+    }
 }

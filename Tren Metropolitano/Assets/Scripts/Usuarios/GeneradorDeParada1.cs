@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GeneradorDeUsuarios : MonoBehaviour
+public class GeneradorDeParada1 : MonoBehaviour
 {
     private int hora=6;
     private float minuto=0;

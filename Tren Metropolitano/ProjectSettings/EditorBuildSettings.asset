@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/est_central.unity
     guid: 09b6eb56592c5a74ea5f592035288cec
+  - enabled: 1
+    path: Assets/Scenes/est_paradas.unity
+    guid: 1d1af186c79bd274fb9ab55f9c88719b
   m_configObjects: {}
