@@ -5,9 +5,9 @@ using UnityEngine;
 public class Horarios 
 {
     public Tiempo[] demanda = new Tiempo[] {
-       new Tiempo(7,30,8,0,25),
-       new Tiempo(12,0,13,0,22),
-       new Tiempo(18,30,19,30,23)
+       new Tiempo(7,30,8,0,12),
+       new Tiempo(12,0,13,0,13),
+       new Tiempo(18,30,19,30,14)
     };
     public int minutosEntreSalidas = 10;
     public string[] dias = new string[] {

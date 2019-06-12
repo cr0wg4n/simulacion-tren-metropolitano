@@ -5,12 +5,12 @@ using UnityEngine.UI;
 
 public class GeneradorDeUsuarios : MonoBehaviour
 {
-    private int hora=6;
-    private float minuto=0;
+    private int hora = 6;
+    private float minuto = 0;
     private int minutoInt = 0;
     public bool trenEnEstacion = false;
     public GameObject estacion;
-    public float velocidadDeUsuariosBase=20;
+    public float velocidadDeUsuariosBase = 15;
     private float velocidadActual;
     public GameObject ancianos;
     public GameObject universitarios;
@@ -19,13 +19,14 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public InputField inputMuestra;
     public Slider velocidadSlide;
     public List<GameObject> usuarios;
-    private int numeroPersonasEstacion=0;
+    private int numeroPersonasEstacion = 0;
     public Text cantidad;
     public Text horaEstación;
     public GameObject tren;
     public GameObject salidaIzq;
     public GameObject salidaDerecha;
-
+    private int basePersonasLlegadas = 30;
+    private int diferencialPersonas;
     //variables para colas
     public int tPromedioEntreLlegadas = 0;
     private int tPromedioEntreLlegadasBase = 100;
@@ -34,7 +35,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public List<double> probs;
     public List<int> tiempos;
     public List<GameObject> trenes;
-
+    private bool demandaBandera = false;
     Horarios horarios = new Horarios();
 
     void controlHora() {
@@ -47,9 +48,14 @@ public class GeneradorDeUsuarios : MonoBehaviour
         }
         this.GetComponent<Ambiente>().rotarEstrella();
     }
+    void actualizarPersonasLlegadas() {
+        diferencialPersonas = basePersonasLlegadas - Mathf.RoundToInt (basePersonasLlegadas * velocidadSlide.value);
+        generarPersonas(diferencialPersonas);
+    }
     void Start()
     {
-        generarPersonas(30);
+        diferencialPersonas = 0;
+        generarPersonas(basePersonasLlegadas);
         generarTren();
     }
 
@@ -231,7 +237,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
         }
         for (int i = 0; i < tiempos.Count; i++)
         {
-            //Debug.Log(tiempos[i] + " - " + probs[i]);
+            Debug.Log(tiempos[i] + " - " + probs[i]);
         }
        
     }
@@ -259,18 +265,29 @@ public class GeneradorDeUsuarios : MonoBehaviour
     void controlDeDemanda() {
         foreach (var demanda in horarios.demanda)
         {
-            if (demanda.HoraIni == hora && demanda.MinutoIni == minutoInt)
+            enHora(demanda.HoraIni, demanda.MinutoIni, demanda.HoraFin, demanda.MinutoFin);
+            if (demandaBandera)
             {
-                generarPersonas(demanda.TEntrePasajeros);
-                Debug.Log("demanda");
-            }
-            if (demanda.HoraFin == hora && demanda.MinutoFin == minutoInt) {
-                generarPersonas(40);
-                Debug.Log("sin demanda");
+                int dif = demanda.TEntrePasajeros - Mathf.RoundToInt(demanda.TEntrePasajeros * velocidadSlide.value);
+                generarPersonas(dif);
+                Debug.Log("Demanda: " + dif);
+            } else {
+                actualizarPersonasLlegadas();
+                Debug.Log("Sin demanda: " + diferencialPersonas);
             }
         }
     }
 
+    void enHora(int horaI, int minI, int horaF, int minF) {
+        if (hora == horaI && minutoInt == minI)
+        {
+            demandaBandera = true;
+        }
+        if (hora == horaF && minutoInt == minF)
+        {
+            demandaBandera = false;
+        }
+    }
 
     void OnTriggerEnter2D(Collider2D collision)
     {
