@@ -25,7 +25,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public GameObject tren;
     public GameObject salidaIzq;
     public GameObject salidaDerecha;
-    private int basePersonasLlegadas = 30;
+    private int basePersonasLlegadas = 40;
     private int diferencialPersonas;
     //variables para colas
     public int tPromedioEntreLlegadas = 0;
@@ -37,16 +37,25 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public List<GameObject> trenes;
     private bool demandaBandera = false;
     Horarios horarios = new Horarios();
-
+    //tren timestamp
+    private int minTimestamp=0;
     void controlHora() {
         if (minuto > 60) {
             hora++;
             minuto = 0;
         }
-        if (hora >= 24) {
+        //controla la hora de trabajo del tren
+        if (hora >= 22) {
             hora = 0;
         }
-        this.GetComponent<Ambiente>().rotarEstrella();
+        if (hora >= 5 && hora < 19)
+        {
+            this.GetComponent<Ambiente>().dia();
+        }
+        else
+        {
+            this.GetComponent<Ambiente>().noche();
+        }
     }
     void actualizarPersonasLlegadas() {
         diferencialPersonas = basePersonasLlegadas - Mathf.RoundToInt (basePersonasLlegadas * velocidadSlide.value);
@@ -127,7 +136,8 @@ public class GeneradorDeUsuarios : MonoBehaviour
         //en el modulo esta cada cuantos minutos llega un tren
         if ((minutoInt % 25==0 && minutoInt != 0) && trenEnEstacion==false) {
            generarTren();
-           minuto ++;
+            minTimestamp = minutoInt;
+            minuto ++;
         }
     }
     void generarTren() {
@@ -140,7 +150,8 @@ public class GeneradorDeUsuarios : MonoBehaviour
     void moverTrenDerecha() {
         int n = 0;
         //cada cuanto sale un tren esta en el modulo
-        if (trenEnEstacion==true && (minutoInt % 20==0 || numeroPersonasEstacion>=200))
+        //if (trenEnEstacion==true && (minutoInt - minTimestamp == 15 || numeroPersonasEstacion>=200))
+        if (trenEnEstacion==true && (minutoInt - minTimestamp) % 15== 0)
         {
             foreach (var tren in trenes)
             {
