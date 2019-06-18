@@ -9,6 +9,12 @@ public class Horarios
        new Tiempo(12,0,13,0,13),
        new Tiempo(18,30,19,30,14)
     };
+    public Tiempo[] demandaParada1 = new Tiempo[] {
+       new Tiempo(7,30,8,0,40),
+       new Tiempo(12,0,13,0,42),
+       new Tiempo(18,30,19,30,43)
+    };
+
     public int minutosEntreSalidas = 10;
     public string[] dias = new string[] {
         "Lunes",

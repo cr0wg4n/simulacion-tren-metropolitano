@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 public class GeneradorDeParada1 : MonoBehaviour
 {
+    private float dinero = 0;
+    private float dineroProm;
+    private int ultimaHora;
+    private int salidaRandom=0;
     private int hora=6;
     private float minuto=0;
     private int minutoInt = 0;
@@ -34,11 +38,12 @@ public class GeneradorDeParada1 : MonoBehaviour
     public Text cantidad;
     public Text horaEstación;
     public Text horaDemanda;
+    public Text dineroPromedio;
     public GameObject tren;
     public GameObject salidaIzq;
     public GameObject salidaDerecha;
 
-    private int basePersonasLlegadas = 28;
+    private int basePersonasLlegadas = 70;
     private int diferencialPersonas;
     //variables para colas
     public int tPromedioEntreLlegadas = 0;
@@ -67,6 +72,8 @@ public class GeneradorDeParada1 : MonoBehaviour
         controlHora();
         //control de la demanda
         controlDeDemanda();
+        //control de dinero
+        actualizarDinero();
         minutoInt = Mathf.RoundToInt(minuto);
         horaEstación.text = horarios.formatoHora(hora,minutoInt);
         //actualizacion de la velocidad
@@ -83,7 +90,7 @@ public class GeneradorDeParada1 : MonoBehaviour
         minuto += (velocidadSlide.value*0.50f);
 
         //en el modulo esta cada cuantos minutos llega un tren
-        if ((minutoInt % 25==0 && minutoInt != 0) && trenEnEstacion==false) {
+        if ((minutoInt % 35==0 && minutoInt != 0) && trenEnEstacion==false) {
            generarTren();
             minTimestamp = minutoInt;
             minuto++;
@@ -99,12 +106,13 @@ public class GeneradorDeParada1 : MonoBehaviour
         if (minutoInt % n==0) {
             minuto++;
             int sal = Random.Range(0, 5);
-            generarSalidas(sal);
+            generarSalidas(sal,true);
             numeroPersonasEstacion -= sal;
         }
     }
     void controlHora()
     {
+        ultimaHora = hora;
         if (minuto > 60)
         {
             hora++;
@@ -121,6 +129,15 @@ public class GeneradorDeParada1 : MonoBehaviour
         else
         {
             this.GetComponent<Ambiente>().noche();
+        }
+    }
+    void actualizarDinero()
+    {
+        if (ultimaHora != hora)
+        {
+            dineroProm = dinero;
+            dineroPromedio.text = "" + dineroProm + " Bs.";
+            dinero = 0;
         }
     }
     void actualizarPersonasLlegadas()
@@ -188,7 +205,7 @@ public class GeneradorDeParada1 : MonoBehaviour
         }
         return res;
     }
-    void generarSalidas(int salidas) {
+    void generarSalidas(int salidas, bool flag) {
         for (int i = 0; i < salidas; i++)
         {
             int rn = Random.Range(0, 200);
@@ -202,6 +219,10 @@ public class GeneradorDeParada1 : MonoBehaviour
                     anci.velocidad = 0.15f;
                     anci.aceleracion = 2f;
                     Destroy(anc, 15f);
+                    if (flag)
+                    {
+                        dinero -= Tarifas.anciano;
+                    }
                     break;
                 case 1:
                     GameObject uni = Instantiate(universitariosSalidas, new Vector2(Random.Range(0f, 0.5f), Random.Range(0f, 0.5f)), Quaternion.identity);
@@ -210,6 +231,10 @@ public class GeneradorDeParada1 : MonoBehaviour
                     univ.velocidad = 0.3f;
                     univ.aceleracion = 2f;
                     Destroy(uni, 15f);
+                    if (flag)
+                    {
+                        dinero -= Tarifas.universitario;
+                    }
                     break;
                 case 2:
                     GameObject ni = Instantiate(niñosSalidas, new Vector2(Random.Range(0f, 0.5f), Random.Range(0f, 0.5f)), Quaternion.identity);
@@ -218,6 +243,10 @@ public class GeneradorDeParada1 : MonoBehaviour
                     ninos.velocidad = 0.2f;
                     ninos.aceleracion = 2f;
                     Destroy(ni, 15f);
+                    if (flag)
+                    {
+                        dinero -= Tarifas.nino;
+                    }
                     break;
                 case 3:
                     GameObject adu = Instantiate(adultosSalidas, new Vector2(Random.Range(0f, 0.5f), Random.Range(0f, 0.5f)), Quaternion.identity);
@@ -226,6 +255,10 @@ public class GeneradorDeParada1 : MonoBehaviour
                     adul.velocidad = 0.25f;
                     adul.aceleracion = 2f;
                     Destroy(adu, 15f);
+                    if (flag)
+                    {
+                        dinero -= Tarifas.adulto;
+                    }
                     break;
                 default:
                     break;
@@ -236,7 +269,7 @@ public class GeneradorDeParada1 : MonoBehaviour
         int n = 0;
         //cada cuanto sale un tren esta en el modulo
         //if (trenEnEstacion==true && (minutoInt - minTimestamp == 15 || numeroPersonasEstacion>=200))
-        if (trenEnEstacion == true && (minutoInt - minTimestamp) % 15 == 0)
+        if (trenEnEstacion == true && (minutoInt - minTimestamp) % 25 == 0)
         {
             foreach (var tren in trenes)
             {
@@ -250,8 +283,11 @@ public class GeneradorDeParada1 : MonoBehaviour
                         numeroPersonasEstacion -= 200;
                     }
                     else {
-                        trenItem.personas = numeroPersonasEstacion;
-                        numeroPersonasEstacion = 0;
+                        if (personasAbordo + numeroPersonasEstacion <= 200)
+                        {
+                            trenItem.personas = personasAbordo + numeroPersonasEstacion;
+                            numeroPersonasEstacion = 0;
+                        }
                     }
                     minuto += 1;
                 }
@@ -371,7 +407,7 @@ public class GeneradorDeParada1 : MonoBehaviour
         return res;
     }
     void controlDeDemanda() {
-        foreach (var demanda in horarios.demanda)
+        foreach (var demanda in horarios.demandaParada1)
         {
             enHora(demanda.HoraIni, demanda.MinutoIni, demanda.HoraFin, demanda.MinutoFin);
             if (demandaBandera)
@@ -462,13 +498,32 @@ public class GeneradorDeParada1 : MonoBehaviour
     }
     void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "persona")
+        switch (collision.gameObject.tag)
         {
-            numeroPersonasEstacion++;
+            case "persona_univ":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.universitario;
+                break;
+            case "persona_nin":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.nino;
+                break;
+            case "persona_adul":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.adulto;
+                break;
+            case "persona_abue":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.anciano;
+                break;
+            default:
+                break;
         }
         if (collision.gameObject.tag == "tren")
         {
-            generarSalidas(personasAbordo);
+            salidaRandom = Random.Range(0, 20);
+            generarSalidas(salidaRandom,false);
+            personasAbordo -= salidaRandom;
             Debug.Log("salidas");
             trenEnEstacion = true;
         }

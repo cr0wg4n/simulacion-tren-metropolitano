@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 public class GeneradorDeUsuarios : MonoBehaviour
 {
+    private float dinero=0;
+    private float dineroProm;
+    private int ultimaHora;
     private int hora=6;
     private float minuto=0;
     private int minutoInt = 0;
@@ -34,6 +37,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public Text cantidad;
     public Text horaEstación;
     public Text horaDemanda;
+    public Text dineroPromedio;
     public GameObject tren;
     public GameObject salidaIzq;
     public GameObject salidaDerecha;
@@ -67,6 +71,8 @@ public class GeneradorDeUsuarios : MonoBehaviour
         controlHora();
         //control de la demanda
         controlDeDemanda();
+        //control de dinero
+        actualizarDinero();
         minutoInt = Mathf.RoundToInt(minuto);
         horaEstación.text = horarios.formatoHora(hora,minutoInt);
         //actualizacion de la velocidad
@@ -99,12 +105,13 @@ public class GeneradorDeUsuarios : MonoBehaviour
         if (minutoInt % n==0) {
             minuto++;
             int sal = Random.Range(0, 5);
-            generarSalidas(sal);
+            generarSalidas(sal,true);
             numeroPersonasEstacion -= sal;
         }
     }
     void controlHora()
     {
+        ultimaHora = hora;
         if (minuto > 60)
         {
             hora++;
@@ -152,6 +159,13 @@ public class GeneradorDeUsuarios : MonoBehaviour
         trencito.personas = personasAbordo;
         trenes.Add(trenGenerado);
     }
+    void actualizarDinero() {
+        if (ultimaHora != hora) {
+            dineroProm = dinero;
+            dineroPromedio.text = "" + dineroProm + " Bs.";
+            dinero = 0;
+        }
+    }
     List<GameObject> generarVectoresdeSalida(int n) {
         List<GameObject> res = new List<GameObject>();
         for (int i = 0; i < n; i++)
@@ -188,7 +202,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
         }
         return res;
     }
-    void generarSalidas(int salidas) {
+    void generarSalidas(int salidas, bool flag) {
         for (int i = 0; i < salidas; i++)
         {
             int rn = Random.Range(0, 200);
@@ -202,6 +216,10 @@ public class GeneradorDeUsuarios : MonoBehaviour
                     anci.velocidad = 0.15f;
                     anci.aceleracion = 2f;
                     Destroy(anc, 15f);
+                    if (flag)
+                    {
+                        dinero -= Tarifas.anciano;
+                    }
                     break;
                 case 1:
                     GameObject uni = Instantiate(universitariosSalidas, new Vector2(Random.Range(0f, 0.5f), Random.Range(0f, 0.5f)), Quaternion.identity);
@@ -210,6 +228,9 @@ public class GeneradorDeUsuarios : MonoBehaviour
                     univ.velocidad = 0.3f;
                     univ.aceleracion = 2f;
                     Destroy(uni, 15f);
+                    if (flag) {
+                        dinero -= Tarifas.universitario;
+                    }
                     break;
                 case 2:
                     GameObject ni = Instantiate(niñosSalidas, new Vector2(Random.Range(0f, 0.5f), Random.Range(0f, 0.5f)), Quaternion.identity);
@@ -218,6 +239,10 @@ public class GeneradorDeUsuarios : MonoBehaviour
                     ninos.velocidad = 0.2f;
                     ninos.aceleracion = 2f;
                     Destroy(ni, 15f);
+                    if (flag)
+                    {
+                        dinero -= Tarifas.nino;
+                    }
                     break;
                 case 3:
                     GameObject adu = Instantiate(adultosSalidas, new Vector2(Random.Range(0f, 0.5f), Random.Range(0f, 0.5f)), Quaternion.identity);
@@ -226,6 +251,10 @@ public class GeneradorDeUsuarios : MonoBehaviour
                     adul.velocidad = 0.25f;
                     adul.aceleracion = 2f;
                     Destroy(adu, 15f);
+                    if (flag)
+                    {
+                        dinero -= Tarifas.adulto;
+                    }
                     break;
                 default:
                     break;
@@ -462,13 +491,30 @@ public class GeneradorDeUsuarios : MonoBehaviour
     }
     void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "persona")
+        switch (collision.gameObject.tag)
         {
-            numeroPersonasEstacion++;
+            case "persona_univ":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.universitario;
+                break;
+            case "persona_nin":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.nino;
+                break;
+            case "persona_adul":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.adulto;
+                break;
+            case "persona_abue":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.anciano;
+                break;
+            default:
+                break;
         }
         if (collision.gameObject.tag == "tren")
         {
-            generarSalidas(personasAbordo);
+            generarSalidas(personasAbordo, false);
             Debug.Log("salidas");
             trenEnEstacion = true;
         }
@@ -479,5 +525,8 @@ public class GeneradorDeUsuarios : MonoBehaviour
         {
             trenEnEstacion = false;
         }
+    }
+    public void SacarCaptura() {
+        ScreenCapture.CaptureScreenshot("Similacion-"+ System.DateTime.Now.ToString("yyyy/MM/dd-HH:mm:ss")+".png");
     }
 }
