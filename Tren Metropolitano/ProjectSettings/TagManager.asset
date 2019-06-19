@@ -9,6 +9,11 @@ TagManager:
   - persona_salida
   - tren
   - grap
+  - persona_univ
+  - persona_nin
+  - persona_adul
+  - persona_abue
+  - captura
   layers:
   - Default
   - TransparentFX

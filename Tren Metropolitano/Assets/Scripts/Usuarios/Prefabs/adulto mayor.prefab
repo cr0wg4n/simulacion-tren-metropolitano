@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 8238779957834296808}
   m_Layer: 0
   m_Name: adulto mayor
-  m_TagString: persona
+  m_TagString: persona_abue
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

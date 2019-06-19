@@ -2,9 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
 
 public class GeneradorDeUsuarios : MonoBehaviour
 {
+    private int personasAtendidas=0;
+    private float dinero=0;
+    private float dineroProm;
+    private int ultimaHora;
     private int hora=6;
     private float minuto=0;
     private int minutoInt = 0;
@@ -12,19 +18,29 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public GameObject estacion;
     public float velocidadDeUsuariosBase=20;
     private float velocidadActual;
+    private int personasAbordo;
     public GameObject ancianos;
     public GameObject universitarios;
     public GameObject niños;
     public GameObject adultos;
-    public InputField inputMuestra;
+
+    public GameObject ancianosSalidas;
+    public GameObject universitariosSalidas;
+    public GameObject niñosSalidas;
+    public GameObject adultosSalidas;
+
     public Dropdown selectLlegadas;
     public Dropdown selectDistribucion;
     public Slider velocidadSlide;
     public List<GameObject> usuarios;
+    public List<GameObject> posSalidas;
+
     private int numeroPersonasEstacion=0;
     public Text cantidad;
     public Text horaEstación;
     public Text horaDemanda;
+    public Text dineroPromedio;
+    public Text nombreEstacion;
     public GameObject tren;
     public GameObject salidaIzq;
     public GameObject salidaDerecha;
@@ -43,12 +59,15 @@ public class GeneradorDeUsuarios : MonoBehaviour
     Horarios horarios = new Horarios();
 
     private int minTimestamp = 0;
+    Estadistica estadistica= new Estadistica(EstacionEstatica.NombreEstacion);
 
     void Start()
     {
         diferencialPersonas = 0;
         generarPersonasSegunDistribucion(basePersonasLlegadas);
         generarTren();
+        posSalidas = generarVectoresdeSalida(200);
+        nombreEstacion.text = EstacionEstatica.NombreEstacion;
     }
 
     void Update()
@@ -57,6 +76,8 @@ public class GeneradorDeUsuarios : MonoBehaviour
         controlHora();
         //control de la demanda
         controlDeDemanda();
+        //control de dinero
+        actualizarDinero();
         minutoInt = Mathf.RoundToInt(minuto);
         horaEstación.text = horarios.formatoHora(hora,minutoInt);
         //actualizacion de la velocidad
@@ -68,6 +89,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
         //tren pendiente a llenarse
         moverTrenDerecha();
         generadorDePersonas();
+        salidasAleatorias();
 
         minuto += (velocidadSlide.value*0.50f);
 
@@ -78,8 +100,23 @@ public class GeneradorDeUsuarios : MonoBehaviour
             minuto++;
         }
     }
+    void salidasAleatorias() {
+        if (numeroPersonasEstacion > 10) {
+            generarSalidasporTiempo(60);
+        }
+    }
+    void generarSalidasporTiempo(int max) {
+        int n = Random.Range(0,max);
+        if (minutoInt % n==0) {
+            minuto++;
+            int sal = Random.Range(0, 5);
+            generarSalidas(sal,true);
+            numeroPersonasEstacion -= sal;
+        }
+    }
     void controlHora()
     {
+        ultimaHora = hora;
         if (minuto > 60)
         {
             hora++;
@@ -110,20 +147,127 @@ public class GeneradorDeUsuarios : MonoBehaviour
         {
             case 0:
                 generarPersonasExponencial(n);
-                Debug.Log("distribucion exponencial");
+                //Debug.Log("distribucion exponencial");
                 break;
             case 1:
                 generarPersonasPoisson(n);
-                Debug.Log("distribucion poisson");
+                //Debug.Log("distribucion poisson");
                 break;
         }
     }
     void generarTren() {
+        personasAbordo = Random.Range(100, 200);
         GameObject trenGenerado = Instantiate(tren, salidaIzq.transform.position, Quaternion.identity);
         TrenControl trencito = trenGenerado.GetComponent<TrenControl>();
         trencito.parada = estacion;
         trencito.final = salidaDerecha;
+        trencito.personas = personasAbordo;
         trenes.Add(trenGenerado);
+    }
+    void actualizarDinero() {
+        if (ultimaHora != hora) {
+            dineroProm = dinero;
+            Dato dato = new Dato(hora, dineroProm, personasAtendidas);
+            estadistica.historial.Add(dato);
+            dineroPromedio.text = "" + dineroProm + " Bs.";
+            dinero = 0;
+            personasAtendidas = 0;
+        }
+    }
+    List<GameObject> generarVectoresdeSalida(int n) {
+        List<GameObject> res = new List<GameObject>();
+        for (int i = 0; i < n; i++)
+        {
+
+            int rn = Random.Range(0, 4);
+            float x = 0f;
+            float y = 0f;
+            switch (rn)
+            {
+                case 0:
+                    x = Random.Range(-9f, 9f);
+                    y = Random.Range(5f, 6f);
+                    break;
+                case 1:
+                    x = Random.Range(9f, 10f);
+                    y = Random.Range(-5f, 5f);
+                    break;
+                case 2:
+                    x = Random.Range(-9f, 9f);
+                    y = Random.Range(-5f, -6f);
+                    break;
+                case 3:
+                    x = Random.Range(-9f, -10f);
+                    y = Random.Range(-5f, 5f);
+                    break;
+                default:
+                    break;
+            }
+            Vector2 vectorRandom = new Vector3(x, y);
+            GameObject salida = new GameObject();
+            salida.transform.position = vectorRandom;
+            res.Add(salida);
+        }
+        return res;
+    }
+    void generarSalidas(int salidas, bool flag) {
+        for (int i = 0; i < salidas; i++)
+        {
+            int rn = Random.Range(0, 200);
+            int n = Random.Range(0, 4);
+            switch (n)
+            {
+                case 0:
+                    GameObject anc = Instantiate(ancianosSalidas, new Vector2(Random.Range(0f, 0.5f), Random.Range(0f, 0.5f)) , Quaternion.identity);
+                    Usuario anci = anc.GetComponent<Usuario>();
+                    anci.parada = posSalidas[rn];
+                    anci.velocidad = 0.15f;
+                    anci.aceleracion = 2f;
+                    Destroy(anc, 15f);
+                    if (flag)
+                    {
+                        dinero -= Tarifas.anciano;
+                    }
+                    break;
+                case 1:
+                    GameObject uni = Instantiate(universitariosSalidas, new Vector2(Random.Range(0f, 0.5f), Random.Range(0f, 0.5f)), Quaternion.identity);
+                    Usuario univ = uni.GetComponent<Usuario>();
+                    univ.parada = posSalidas[rn];
+                    univ.velocidad = 0.3f;
+                    univ.aceleracion = 2f;
+                    Destroy(uni, 15f);
+                    if (flag) {
+                        dinero -= Tarifas.universitario;
+                    }
+                    break;
+                case 2:
+                    GameObject ni = Instantiate(niñosSalidas, new Vector2(Random.Range(0f, 0.5f), Random.Range(0f, 0.5f)), Quaternion.identity);
+                    Usuario ninos = ni.GetComponent<Usuario>();
+                    ninos.parada = posSalidas[rn];
+                    ninos.velocidad = 0.2f;
+                    ninos.aceleracion = 2f;
+                    Destroy(ni, 15f);
+                    if (flag)
+                    {
+                        dinero -= Tarifas.nino;
+                    }
+                    break;
+                case 3:
+                    GameObject adu = Instantiate(adultosSalidas, new Vector2(Random.Range(0f, 0.5f), Random.Range(0f, 0.5f)), Quaternion.identity);
+                    Usuario adul = adu.GetComponent<Usuario>();
+                    adul.parada = posSalidas[rn];
+                    adul.velocidad = 0.25f;
+                    adul.aceleracion = 2f;
+                    Destroy(adu, 15f);
+                    if (flag)
+                    {
+                        dinero -= Tarifas.adulto;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
     }
     void moverTrenDerecha() {
         int n = 0;
@@ -139,9 +283,13 @@ public class GeneradorDeUsuarios : MonoBehaviour
                     trenItem.modo = 1;
                     if (numeroPersonasEstacion >= 200)
                     {
+                        trenItem.personas = 200;
                         numeroPersonasEstacion -= 200;
+                        personasAtendidas += 200;
                     }
                     else {
+                        trenItem.personas = numeroPersonasEstacion;
+                        personasAtendidas += numeroPersonasEstacion;
                         numeroPersonasEstacion = 0;
                     }
                     minuto += 1;
@@ -248,15 +396,15 @@ public class GeneradorDeUsuarios : MonoBehaviour
         {
             case 0:
                 res = 1f;
-                Debug.Log("periodo laboral");
+                //Debug.Log("periodo laboral");
                 break;
             case 1:
                 res = 2f;
-                Debug.Log("periodo vacacional");
+                //Debug.Log("periodo vacacional");
                 break;
             case 2:
                 res = 1f;
-                Debug.Log("dia festivo");
+                //Debug.Log("dia festivo");
                 break;
         }
         return res;
@@ -271,16 +419,16 @@ public class GeneradorDeUsuarios : MonoBehaviour
                 float ajuste = periodosSeleccionado();
                 dif = Mathf.RoundToInt (dif * ajuste);
                 generarPersonasSegunDistribucion(dif);
-                horaDemanda.color = Color.red;
+                horaDemanda.color = Color.yellow;
                 horaDemanda.text = "Hora pico";
-                Debug.Log("Demanda: " + dif);
+                //Debug.Log("Demanda: " + dif);
             }
             else
             {
                 actualizarPersonasLlegadas();
                 horaDemanda.color = Color.green;
                 horaDemanda.text = "Hora Normal";
-                Debug.Log("Sin demanda: " + diferencialPersonas);
+                //Debug.Log("Sin demanda: " + diferencialPersonas);
             }
         }
     }
@@ -353,12 +501,31 @@ public class GeneradorDeUsuarios : MonoBehaviour
     }
     void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "persona")
+        switch (collision.gameObject.tag)
         {
-            numeroPersonasEstacion++;
+            case "persona_univ":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.universitario;
+                break;
+            case "persona_nin":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.nino;
+                break;
+            case "persona_adul":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.adulto;
+                break;
+            case "persona_abue":
+                numeroPersonasEstacion++;
+                dinero += Tarifas.anciano;
+                break;
+            default:
+                break;
         }
         if (collision.gameObject.tag == "tren")
         {
+            generarSalidas(personasAbordo, false);
+            //Debug.Log("salidas");
             trenEnEstacion = true;
         }
     }
@@ -368,5 +535,10 @@ public class GeneradorDeUsuarios : MonoBehaviour
         {
             trenEnEstacion = false;
         }
+    }
+    public void guardarCosto() {
+        ModuloMemoria memoria = new ModuloMemoria();
+        memoria.guardarNuevaEstadistica(estadistica);
+        SceneManager.LoadScene("Graph");
     }
 }
