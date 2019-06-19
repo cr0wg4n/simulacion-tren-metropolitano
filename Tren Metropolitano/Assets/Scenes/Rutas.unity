@@ -191,7 +191,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2144509833}
-        m_MethodName: paradaEscena
+        m_MethodName: paradaVerde
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -556,7 +556,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2144509833}
-        m_MethodName: runEstCentral
+        m_MethodName: estacionAmarilla
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -766,7 +766,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2144509833}
-        m_MethodName: paradaEscena
+        m_MethodName: paradaRoja
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -973,7 +973,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2144509833}
-        m_MethodName: runEstCentral
+        m_MethodName: estacionCentral
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1193,7 +1193,7 @@ GameObject:
   - component: {fileID: 1296472598}
   - component: {fileID: 1296472597}
   m_Layer: 5
-  m_Name: B_Verde
+  m_Name: B_Rojo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1259,7 +1259,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2144509833}
-        m_MethodName: runEstCentral
+        m_MethodName: estacionRoja
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1453,7 +1453,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2144509833}
-        m_MethodName: runEstCentral
+        m_MethodName: estacionVerde
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2010,7 +2010,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2144509833}
-        m_MethodName: paradaEscena
+        m_MethodName: paradaAmarilla
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

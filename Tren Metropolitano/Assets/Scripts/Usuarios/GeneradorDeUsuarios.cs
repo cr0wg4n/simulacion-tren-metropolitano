@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
 
 public class GeneradorDeUsuarios : MonoBehaviour
 {
+    private int personasAtendidas=0;
     private float dinero=0;
     private float dineroProm;
     private int ultimaHora;
@@ -26,7 +29,6 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public GameObject niñosSalidas;
     public GameObject adultosSalidas;
 
-    public InputField inputMuestra;
     public Dropdown selectLlegadas;
     public Dropdown selectDistribucion;
     public Slider velocidadSlide;
@@ -38,6 +40,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
     public Text horaEstación;
     public Text horaDemanda;
     public Text dineroPromedio;
+    public Text nombreEstacion;
     public GameObject tren;
     public GameObject salidaIzq;
     public GameObject salidaDerecha;
@@ -56,6 +59,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
     Horarios horarios = new Horarios();
 
     private int minTimestamp = 0;
+    Estadistica estadistica= new Estadistica(EstacionEstatica.NombreEstacion);
 
     void Start()
     {
@@ -63,6 +67,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
         generarPersonasSegunDistribucion(basePersonasLlegadas);
         generarTren();
         posSalidas = generarVectoresdeSalida(200);
+        nombreEstacion.text = EstacionEstatica.NombreEstacion;
     }
 
     void Update()
@@ -162,8 +167,11 @@ public class GeneradorDeUsuarios : MonoBehaviour
     void actualizarDinero() {
         if (ultimaHora != hora) {
             dineroProm = dinero;
+            Dato dato = new Dato(hora, dineroProm, personasAtendidas);
+            estadistica.historial.Add(dato);
             dineroPromedio.text = "" + dineroProm + " Bs.";
             dinero = 0;
+            personasAtendidas = 0;
         }
     }
     List<GameObject> generarVectoresdeSalida(int n) {
@@ -277,9 +285,11 @@ public class GeneradorDeUsuarios : MonoBehaviour
                     {
                         trenItem.personas = 200;
                         numeroPersonasEstacion -= 200;
+                        personasAtendidas += 200;
                     }
                     else {
                         trenItem.personas = numeroPersonasEstacion;
+                        personasAtendidas += numeroPersonasEstacion;
                         numeroPersonasEstacion = 0;
                     }
                     minuto += 1;
@@ -515,7 +525,7 @@ public class GeneradorDeUsuarios : MonoBehaviour
         if (collision.gameObject.tag == "tren")
         {
             generarSalidas(personasAbordo, false);
-            Debug.Log("salidas");
+            //Debug.Log("salidas");
             trenEnEstacion = true;
         }
     }
@@ -526,7 +536,9 @@ public class GeneradorDeUsuarios : MonoBehaviour
             trenEnEstacion = false;
         }
     }
-    public void SacarCaptura() {
-        ScreenCapture.CaptureScreenshot("Similacion-"+ System.DateTime.Now.ToString("yyyy/MM/dd-HH:mm:ss")+".png");
+    public void guardarCosto() {
+        ModuloMemoria memoria = new ModuloMemoria();
+        memoria.guardarNuevaEstadistica(estadistica);
+        SceneManager.LoadScene("Graph");
     }
 }

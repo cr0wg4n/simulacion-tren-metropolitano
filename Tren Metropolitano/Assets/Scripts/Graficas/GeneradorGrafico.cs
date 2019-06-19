@@ -1,41 +1,61 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+
 
 public class GeneradorGrafico : MonoBehaviour
 {
     public GameObject bolita;
     public Graph graficador;
+    public Text ejeX;
+    public Text ejeY;
+    public Text titulo;
+    private List<Estadistica> datos;
+    public GameObject textoFinal;
+    private ModuloMemoria memoria;
     void Start()
     {
-        
+        memoria = new ModuloMemoria();
+        datos = memoria.cargar();
     }
 
     // Update is called once per frame
     void Update()
     {
         graficador = new Graph(15, 6, new Vector2(-7.5f, -3f));
-        float[] vector = new float[100];
-        for (int i = 0; i < vector.Length; i++)
+
+        List<float> vector = new List<float>();
+
+        List<Dato> d = datos[0].historial;
+        for (int i = 0; i < datos.Count; i++)
         {
-            float n = Random.Range(0f, 100f);
-            vector[i] = n;
-        }
-        List<List<Vector2>> grafo = graficador.generarListas(vector, 5f);
-        foreach (var x in grafo)
-        {
-            foreach (var y in x)
+            for (int j = 0; j < datos[i].historial.Count; j++)
             {
-                Instantiate(bolita, y, Quaternion.identity);
+                float n = datos[i].historial[j].dinero;
+                vector.Add (n);
             }
         }
-    }
-    void DestroyAll(string tag)
-    {
-        GameObject[] instances = GameObject.FindGameObjectsWithTag(tag);
-        for (int i = 0; i < instances.Length; i++)
+        List<List<Vector2>> grafo = graficador.generarListas(vector, 40f);
+        foreach (var x in grafo)
         {
-            GameObject.Destroy(instances[i]);
+            int n = 0;
+            Vector2 res=new Vector2();
+            foreach (var y in x)
+            {
+                n++;
+                if (n == x.Count)
+                {
+                    textoFinal.GetComponentInChildren<Text>().text=""+y.x;
+                    Instantiate(textoFinal, res, Quaternion.identity);
+                }
+                else {
+                    if (n != x.Count - 1) {
+                        Instantiate(bolita, y, Quaternion.identity);
+                    }
+                }
+                res = y;
+            }
         }
     }
 }

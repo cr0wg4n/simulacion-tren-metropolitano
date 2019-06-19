@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GeneradorDeParada1 : MonoBehaviour
 {
+    private int personasAtendidas = 0;
     private float dinero = 0;
     private float dineroProm;
     private int ultimaHora;
@@ -39,6 +41,7 @@ public class GeneradorDeParada1 : MonoBehaviour
     public Text horaEstación;
     public Text horaDemanda;
     public Text dineroPromedio;
+    public Text nombreParada;
     public GameObject tren;
     public GameObject salidaIzq;
     public GameObject salidaDerecha;
@@ -55,7 +58,7 @@ public class GeneradorDeParada1 : MonoBehaviour
     public List<GameObject> trenes;
     private bool demandaBandera = false;
     Horarios horarios = new Horarios();
-
+    Estadistica estadistica = new Estadistica(EstacionEstatica.NombreEstacion);
     private int minTimestamp = 0;
 
     void Start()
@@ -63,6 +66,7 @@ public class GeneradorDeParada1 : MonoBehaviour
         diferencialPersonas = 0;
         generarPersonasSegunDistribucion(basePersonasLlegadas);
         generarTren();
+        nombreParada.text = EstacionEstatica.NombreEstacion;
         posSalidas = generarVectoresdeSalida(200);
     }
 
@@ -105,7 +109,7 @@ public class GeneradorDeParada1 : MonoBehaviour
         int n = Random.Range(0,max);
         if (minutoInt % n==0) {
             minuto++;
-            int sal = Random.Range(0, 5);
+            int sal = Random.Range(0, 2);
             generarSalidas(sal,true);
             numeroPersonasEstacion -= sal;
         }
@@ -136,8 +140,11 @@ public class GeneradorDeParada1 : MonoBehaviour
         if (ultimaHora != hora)
         {
             dineroProm = dinero;
+            Dato dato = new Dato(hora, dineroProm, personasAtendidas);
             dineroPromedio.text = "" + dineroProm + " Bs.";
+            estadistica.historial.Add(dato);
             dinero = 0;
+            personasAtendidas = 0;
         }
     }
     void actualizarPersonasLlegadas()
@@ -279,14 +286,25 @@ public class GeneradorDeParada1 : MonoBehaviour
                     trenItem.modo = 1;
                     if (numeroPersonasEstacion >= 200)
                     {
-                        trenItem.personas = 200;
-                        numeroPersonasEstacion -= 200;
+                        //trenItem.personas = 200;
+                        //numeroPersonasEstacion -= 200;
                     }
                     else {
+                        int diferencia = 200 - personasAbordo; 
                         if (personasAbordo + numeroPersonasEstacion <= 200)
                         {
-                            trenItem.personas = personasAbordo + numeroPersonasEstacion;
-                            numeroPersonasEstacion = 0;
+                            if (diferencia >= numeroPersonasEstacion)
+                            {
+                                personasAtendidas += diferencia;
+                                trenItem.personas = personasAbordo + numeroPersonasEstacion;
+                                numeroPersonasEstacion = 0;
+
+                            }
+                            else {
+                                personasAtendidas += numeroPersonasEstacion;
+                                trenItem.personas = personasAbordo + numeroPersonasEstacion;
+                                numeroPersonasEstacion = 0;
+                            }
                         }
                     }
                     minuto += 1;
@@ -534,5 +552,11 @@ public class GeneradorDeParada1 : MonoBehaviour
         {
             trenEnEstacion = false;
         }
+    }
+    public void guardarCosto()
+    {
+        ModuloMemoria memoria = new ModuloMemoria();
+        memoria.guardarNuevaEstadistica(estadistica);
+        SceneManager.LoadScene("Graph");
     }
 }

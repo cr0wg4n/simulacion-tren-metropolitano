@@ -13,13 +13,13 @@ public class Graph
         this.MAX_X = MAX_X;
         this.MAX_Y = MAX_Y;
     }
-    public List<List<Vector2>> generarListas(float[] valores , float reductor) {
+    public List<List<Vector2>> generarListas(List<float> valores, float reductor) {
         float maxValY = maxValorIteracion(valores);
-        float offsetX = MAX_X / valores.Length;
+        float offsetX = MAX_X / valores.Count;
         float offsetY = MAX_Y / (maxValY/reductor);
         List<List<Vector2>> largo = new List<List<Vector2>>();
        
-        for (int i = 0; i < valores.Length; i++)
+        for (int i = 0; i < valores.Count; i++)
         {
             float x = partida.x;
             float y = partida.y;
@@ -31,6 +31,7 @@ public class Graph
                 ancho.Add(new Vector2(x, y));
                 y += offsetY;
             }
+            ancho.Add(new Vector2(valores[i], 0f));
             largo.Add(ancho);
             partida.x += offsetX;
         }
@@ -40,9 +41,9 @@ public class Graph
         float res = (maxA * valorL) / maxL;
         return res;
     }
-    public float maxValorIteracion(float[] valY) {
+    public float maxValorIteracion(List<float> valY) {
         float res = valY[0];
-        for (int i = 1; i < valY.Length; i++)
+        for (int i = 1; i < valY.Count; i++)
         {
             if (res <= valY[i]) {
                 res = valY[i];
