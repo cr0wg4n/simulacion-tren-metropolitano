@@ -109,7 +109,7 @@ public class GeneradorDeParada1 : MonoBehaviour
         int n = Random.Range(0,max);
         if (minutoInt % n==0) {
             minuto++;
-            int sal = Random.Range(0, 2);
+            int sal = Random.Range(0, 5);
             generarSalidas(sal,true);
             numeroPersonasEstacion -= sal;
         }
@@ -139,6 +139,7 @@ public class GeneradorDeParada1 : MonoBehaviour
     {
         if (ultimaHora != hora)
         {
+            if (dinero < 0) { dinero = 0; }
             dineroProm = dinero;
             Dato dato = new Dato(hora, dineroProm, personasAtendidas);
             dineroPromedio.text = "" + dineroProm + " Bs.";
@@ -291,20 +292,16 @@ public class GeneradorDeParada1 : MonoBehaviour
                     }
                     else {
                         int diferencia = 200 - personasAbordo; 
-                        if (personasAbordo + numeroPersonasEstacion <= 200)
+                        if (numeroPersonasEstacion >= diferencia)
                         {
-                            if (diferencia >= numeroPersonasEstacion)
-                            {
-                                personasAtendidas += diferencia;
-                                trenItem.personas = personasAbordo + numeroPersonasEstacion;
-                                numeroPersonasEstacion = 0;
-
-                            }
-                            else {
-                                personasAtendidas += numeroPersonasEstacion;
-                                trenItem.personas = personasAbordo + numeroPersonasEstacion;
-                                numeroPersonasEstacion = 0;
-                            }
+                            personasAtendidas += diferencia;
+                            trenItem.personas = personasAbordo + diferencia;
+                            numeroPersonasEstacion -= diferencia;
+                        }
+                        else {
+                            personasAtendidas += numeroPersonasEstacion;
+                            trenItem.personas = personasAbordo + numeroPersonasEstacion;
+                            numeroPersonasEstacion = 0;
                         }
                     }
                     minuto += 1;

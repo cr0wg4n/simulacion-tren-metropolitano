@@ -13,6 +13,7 @@ TagManager:
   - persona_nin
   - persona_adul
   - persona_abue
+  - captura
   layers:
   - Default
   - TransparentFX

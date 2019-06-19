@@ -36,7 +36,7 @@ public class GeneradorGrafico : MonoBehaviour
                 vector.Add (n);
             }
         }
-        List<List<Vector2>> grafo = graficador.generarListas(vector, 40f);
+        List<List<Vector2>> grafo = graficador.generarListas(vector, 35f);
         foreach (var x in grafo)
         {
             int n = 0;
@@ -47,7 +47,7 @@ public class GeneradorGrafico : MonoBehaviour
                 if (n == x.Count)
                 {
                     textoFinal.GetComponentInChildren<Text>().text=""+y.x;
-                    Instantiate(textoFinal, res, Quaternion.identity);
+                    Destroy (Instantiate(textoFinal, res, Quaternion.identity),0.1f);
                 }
                 else {
                     if (n != x.Count - 1) {
@@ -57,5 +57,9 @@ public class GeneradorGrafico : MonoBehaviour
                 res = y;
             }
         }
+    }
+    public void eliminarDatos() {
+        memoria.eliminar();
+        datos = new List<Estadistica>();
     }
 }

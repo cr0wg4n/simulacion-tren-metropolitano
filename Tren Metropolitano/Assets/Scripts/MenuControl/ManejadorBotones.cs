@@ -39,7 +39,7 @@ public class ManejadorBotones : MonoBehaviour
         SceneManager.LoadScene("Menu");
     }
     public void rutas() {
-        SceneManager.LoadScene("rutas");
+        SceneManager.LoadScene("Rutas");
     }
     public void paradaRoja() {
         EstacionEstatica.NombreEstacion = "Parada Roja";
@@ -54,5 +54,8 @@ public class ManejadorBotones : MonoBehaviour
     {
         EstacionEstatica.NombreEstacion = "Parada Verde";
         SceneManager.LoadScene("est_paradas");
+    }
+    public void ayuda() {
+        SceneManager.LoadScene("visor");
     }
 }

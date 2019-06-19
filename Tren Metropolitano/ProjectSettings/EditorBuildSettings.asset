@@ -23,4 +23,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Graph.unity
     guid: 0b0087c16082a7f4fb9ab563009cbb2a
+  - enabled: 1
+    path: Assets/Scenes/visor.unity
+    guid: 78006d938918308459ed99cd1c557780
   m_configObjects: {}

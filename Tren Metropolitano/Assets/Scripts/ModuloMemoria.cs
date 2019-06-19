@@ -30,4 +30,7 @@ public class ModuloMemoria
         antiguo.Add(nuevo);
         guardar(antiguo);
     }
+    public void eliminar() {
+        File.Delete(Application.persistentDataPath + path);
+    }
 }
